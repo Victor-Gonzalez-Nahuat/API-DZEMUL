@@ -46,21 +46,21 @@ def obtenerTotalesYDescuentos(desde_fecha, hasta_fecha, contribuyente=None):
     if contribuyente:
         cursor.execute("""
             SELECT 
-                COALESCE(SUM(CASE WHEN id_status = 0 THEN id_neto ELSE 0 END), 0) AS total_neto, 
-                COALESCE(SUM(CASE WHEN id_status = 0 THEN id_descuento ELSE 0 END), 0) AS total_descuento,
-                SUM(CASE WHEN id_status = 1 THEN 1 ELSE 0 END) AS cantidad_status_1
+                COALESCE(SUM(CASE WHEN status = 0 THEN neto ELSE 0 END), 0) AS total_neto, 
+                COALESCE(SUM(CASE WHEN status = 0 THEN descuento ELSE 0 END), 0) AS total_descuento,
+                SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS cantidad_status_1
             FROM TEARMO01
-            WHERE id_fecha BETWEEN %s AND %s
-            AND id_contribuyente LIKE %s
+            WHERE fecha BETWEEN %s AND %s
+            AND contribuyente LIKE %s
         """, (desde_fecha, hasta_fecha, f"%{contribuyente}%"))
     else:
         cursor.execute("""
             SELECT 
-                COALESCE(SUM(CASE WHEN id_status = 0 THEN id_neto ELSE 0 END), 0) AS total_neto, 
-                COALESCE(SUM(CASE WHEN id_status = 0 THEN id_descuento ELSE 0 END), 0) AS total_descuento,
-                SUM(CASE WHEN id_status = 1 THEN 1 ELSE 0 END) AS cantidad_status_1
+                COALESCE(SUM(CASE WHEN status = 0 THEN neto ELSE 0 END), 0) AS total_neto, 
+                COALESCE(SUM(CASE WHEN status = 0 THEN descuento ELSE 0 END), 0) AS total_descuento,
+                SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS cantidad_status_1
             FROM TEARMO01
-            WHERE id_fecha BETWEEN %s AND %s
+            WHERE fecha BETWEEN %s AND %s
         """, (desde_fecha, hasta_fecha))
 
     resultado = cursor.fetchone()
@@ -78,11 +78,11 @@ def obtenerRecibosConIntervaloYContribuyente(desde_fecha, hasta_fecha, contribuy
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT id_recibo, id_fecha, id_neto, id_descuento, id_concepto1, id_contribuyente 
+        SELECT recibo, fecha, neto, descuento, concepto1, contribuyente 
         FROM TEARMO01 
-        WHERE id_fecha BETWEEN %s AND %s
-        AND id_contribuyente LIKE %s
-        ORDER BY id_fecha DESC
+        WHERE fecha BETWEEN %s AND %s
+        AND contribuyente LIKE %s
+        ORDER BY fecha DESC
     """, (desde_fecha, hasta_fecha, f"%{contribuyente}%"))
 
     resultados = cursor.fetchall()
@@ -110,10 +110,10 @@ def obtenerRecibosConIntervalo(desde_fecha, hasta_fecha):
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT id_recibo, id_fecha, id_neto, id_descuento, id_concepto1, id_contribuyente 
+        SELECT recibo, fecha, neto, descuento, concepto1, contribuyente 
         FROM TEARMO01 
-        WHERE id_fecha BETWEEN %s AND %s
-        ORDER BY id_fecha DESC
+        WHERE fecha BETWEEN %s AND %s
+        ORDER BY fecha DESC
     """, (desde_fecha, hasta_fecha))
 
     resultados = cursor.fetchall()
@@ -143,10 +143,10 @@ def obtenerRecibosHoy():
     fecha_hoy = datetime.datetime.today().strftime('%y%m%d')
 
     cursor.execute("""
-        SELECT id_recibo, id_fecha, id_neto, id_descuento, id_concepto1, id_contribuyente 
+        SELECT recibo, fecha, neto, descuento concepto1, contribuyente 
         FROM TEARMO01 
-        WHERE id_fecha = %s
-        ORDER BY id_fecha DESC
+        WHERE fecha = %s
+        ORDER BY fecha DESC
     """, (fecha_hoy,))
 
     resultados = cursor.fetchall()
@@ -175,15 +175,15 @@ def obtenerDespliegueTotales(desde_fecha, hasta_fecha):
 
     cursor.execute("""
         SELECT 
-            c.id_nombrecuenta,
-            COALESCE(SUM(m.id_neto), 0) AS total_neto,
-            COALESCE(SUM(m.id_descuento), 0) AS total_descuento
+            c.nombrecuenta,
+            COALESCE(SUM(m.neto), 0) AS total_neto,
+            COALESCE(SUM(m.descuento), 0) AS total_descuento
         FROM TEARMO01 m
-        JOIN TEARCA01 c ON m.id_cuenta = c.id_codigoc
-        WHERE m.id_fecha BETWEEN %s AND %s
-        AND m.id_status = 0
-        GROUP BY c.id_nombrecuenta
-        ORDER BY c.id_nombrecuenta
+        JOIN TEARCA01 c ON m.cuenta = c.codigoc
+        WHERE m.fecha BETWEEN %s AND %s
+        AND m.status = 0
+        GROUP BY c.nombrecuenta
+        ORDER BY c.nombrecuenta
     """, (desde_fecha, hasta_fecha))
 
     resultados = cursor.fetchall()
